@@ -30,8 +30,7 @@ class Options:
         s3_endpoint = os.getenv(Options.AUDITLOG_S3_ENDPOINT, None)
         return Options(s3_bucket=s3_bucket, s3_directory=s3_directory, s3_region=s3_region, s3_endpoint=s3_endpoint)
 
-    def __init__(self, s3_bucket: str, s3_directory: str, s3_region: str,
-                 s3_endpoint: str = None):
+    def __init__(self, s3_bucket: str, s3_directory: str, s3_region: str, s3_endpoint: str | None):
         self.bucket = s3_bucket
         self.directory = s3_directory
         self.region = s3_region
@@ -73,9 +72,8 @@ class HTTPAuditLogger(threading.Thread):
         if not opts.directory:
             raise Exception('s3_directory not informed.')
 
-        if opts.endpoint:
-            if not is_valid_endpoint_url(opts.endpoint):
-                raise Exception('s3_endpoint invalid.')
+        if opts.endpoint and not is_valid_endpoint_url(opts.endpoint):
+            raise Exception('s3_endpoint invalid.')
 
         if not opts.region:
             raise Exception('s3_region not informed.')
@@ -104,23 +102,17 @@ class HTTPAuditLogger(threading.Thread):
             self._do_s3_write(record)
 
     def log_request(self, req: Request):
-        try:
-            audit_id = HTTPAuditLogger._make_audit_id(req, False)
-            metadata = HTTPAuditLogger._get_request_metadata(req)
-            req_data = req
-            self._queue_record(audit_id, metadata, req_data)
-        except Exception:
-            raise
+        audit_id = HTTPAuditLogger._make_audit_id(req, False)
+        metadata = HTTPAuditLogger._get_request_metadata(req)
+        req_data = req
+        self._queue_record(audit_id, metadata, req_data)
 
     def log_response(self, req: Request, resp: Response, include_request_in_response: bool,
                      request_timestamp: datetime | None):
-        try:
-            audit_id = HTTPAuditLogger._make_audit_id(req, True)
-            metadata = HTTPAuditLogger._get_response_metadata(req, resp, include_request_in_response, request_timestamp)
-            req_data = req
-            self._queue_record(audit_id, metadata, req_data)
-        except Exception:
-            raise
+        audit_id = HTTPAuditLogger._make_audit_id(req, True)
+        metadata = HTTPAuditLogger._get_response_metadata(req, resp, include_request_in_response, request_timestamp)
+        req_data = req
+        self._queue_record(audit_id, metadata, req_data)
 
     def _queue_record(self, audit_id: str, data: dict, req_data: Request | None):
         # Set the identifier and Timestamp last to ensure it's not overridden.
