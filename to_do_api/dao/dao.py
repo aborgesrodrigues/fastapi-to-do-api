@@ -3,7 +3,6 @@ import os
 import psycopg2
 import psycopg2.extras
 
-
 # register uuid
 psycopg2.extras.register_uuid()
 
@@ -47,7 +46,7 @@ class DAO:
         except Exception as ex:
             raise ex
         finally:
-            self.__cursor.close
+            self.__cursor.close()
 
     def __del__(self):
         if self.__connection:

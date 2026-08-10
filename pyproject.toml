@@ -1,0 +1,27 @@
+[project]
+name = "fastapi-to-do-api"
+version = "0.0.1"
+description = "To do API using FastAPI"
+requires-python = ">=3.14.3, <3.15"
+dependencies = [
+    "boto3==1.43.67",
+    "uvicorn==0.52.1",
+    "fastapi==0.141.1",
+    "psycopg2-binary",
+    "pydantic==2.13.4"
+]
+
+[dependency-groups]
+dev = [
+    "coverage==6.4.4",
+    "flake8==5.0.4",
+    "parameterized==0.8.1",
+    "pytest==7.1.2",
+    "pytest-cov==3.0.0",
+    "pytest-mock==3.8.2",
+    "pytest-xdist==2.5.0",
+    "six==1.16.0",
+    "twine==4.0.1",
+    "pytest-mockservers==0.6.0",
+    "radon==5.1.0"
+]

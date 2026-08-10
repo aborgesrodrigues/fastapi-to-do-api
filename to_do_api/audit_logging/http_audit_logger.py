@@ -4,7 +4,6 @@ import os
 import queue
 import threading
 import time
-import typing as t
 from datetime import datetime
 from functools import wraps
 from io import BytesIO
@@ -12,7 +11,7 @@ from io import BytesIO
 import boto3
 from botocore.endpoint import is_valid_endpoint_url
 from botocore.exceptions import NoCredentialsError
-from flask import Request, Response, request
+from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ class HTTPAuditLogger(threading.Thread):
         return HTTPAuditLogger(opts=opts)
 
     def __init__(self, opts: Options) -> None:
-        super(HTTPAuditLogger, self).__init__()
+        super().__init__()
 
         # validate fields
         if not opts.bucket:
@@ -114,7 +113,7 @@ class HTTPAuditLogger(threading.Thread):
             raise
 
     def log_response(self, req: Request, resp: Response, include_request_in_response: bool,
-                     request_timestamp: t.Optional[datetime]):
+                     request_timestamp: datetime | None):
         try:
             audit_id = HTTPAuditLogger._make_audit_id(req, True)
             metadata = HTTPAuditLogger._get_response_metadata(req, resp, include_request_in_response, request_timestamp)
@@ -123,7 +122,7 @@ class HTTPAuditLogger(threading.Thread):
         except Exception:
             raise
 
-    def _queue_record(self, audit_id: str, data: dict, req_data: t.Optional[Request]):
+    def _queue_record(self, audit_id: str, data: dict, req_data: Request | None):
         # Set the identifier and Timestamp last to ensure it's not overridden.
         # To help consistency, these two fields are set in the golang `audit/logger.go` file, while the `data`
         # fields are populated in the `httpaudit/httpaudit.go` file.
@@ -163,9 +162,9 @@ class HTTPAuditLogger(threading.Thread):
             logger.info(f"Wrote audit log. {return_object}")
 
         except NoCredentialsError as err:
-            logger.error(f"Error writing audit log. {str(err)}")
+            logger.error(f"Error writing audit log. {err!s}")
         except Exception as err:
-            logger.error(f"Error writing audit log. {str(err)}")
+            logger.error(f"Error writing audit log. {err!s}")
 
     def _make_key(self, audit_id: str) -> str:
         key = f'{self.s3_directory}/{datetime.now().strftime("%Y/%m/%d/%H/")}{audit_id}'
@@ -174,36 +173,36 @@ class HTTPAuditLogger(threading.Thread):
     @staticmethod
     def _get_request_metadata(req: Request) -> dict:
         metadata = {
-            "host": req.host,
-            "hostname": req.root_url,
+            "host": req.url.hostname,
+            "hostname": req.url.netloc,
             "method": req.method,
-            "path": req.path,
-            "protocol": req.environ.get('SERVER_PROTOCOL'),
-            "query": req.query_string.decode("utf-8"),  # convert to string
+            "path": req.url.path,
+            "protocol": req.url.scheme,
+            "query": str(req.query_params),  # convert to string
             "headers": list(req.headers),
         }
 
-        if req.content_length:
+        if req.headers.get("content-length"):
             metadata["body"] = HTTPAuditLogger._request_body(req)
 
         return metadata
 
     @staticmethod
     def _get_response_metadata(req: Request, response: Response, include_request_in_response: bool,
-                               request_timestamp: t.Optional[str]) -> dict:
+                               request_timestamp: str | None) -> dict:
         metadata = {
-            "requestHost": req.host,
-            "requestHostname": req.root_url,
+            "requestHost": req.url.hostname,
+            "requestHostname": req.url.hostname,
             "requestMethod": req.method,
-            "requestPath": req.path,
-            "requestProtocol": req.environ.get('SERVER_PROTOCOL'),
-            "protocol": req.environ.get('SERVER_PROTOCOL'),
-            "status": response.status,
-            "statusCode": response.status_code,
-            "headers": list(response.headers),
+            "requestPath": req.url.path,
+            "requestProtocol": req.url.scheme,
+            "protocol": req.url.scheme,
+            # "status": response.status,
+            # "statusCode": response.status_code,
+            # "headers": list(response.headers),
         }
-        if response.content_length:
-            metadata["body"] = HTTPAuditLogger._response_body(resp=response)
+        if response:
+            metadata["body"] = str(response)
 
         if include_request_in_response:
             if req.content_length:
@@ -219,7 +218,7 @@ class HTTPAuditLogger(threading.Thread):
         Creates an audit id for an `upstream` audit log record.  See golang package for more details
         The Audit ID should be unique, so for an HTTP message we append the nanosecond timestamp to the end
         """
-        audit_id = "in{0}{1}{2}{3}".format(req.path, "" if req.path.endswith("/") else "/", req.method,
+        audit_id = "in{0}{1}{2}{3}".format(req.url.path, "" if req.url.path.endswith("/") else "/", req.method,
                                            "/response" if is_response else "/request")
         audit_id += f'_{time.time_ns()}'
         return audit_id
@@ -230,7 +229,7 @@ class HTTPAuditLogger(threading.Thread):
         Retrieve the request body without making it unavailable
         consuming the form data in middleware will make it unavailable to the final application
         """
-        body = req.data
+        body = req.body
         # noinspection PyBroadException
         try:
             req.environ['wsgi.input'] = BytesIO(body)
@@ -291,6 +290,8 @@ class HTTPAuditLogger(threading.Thread):
         def _log_inbound(f):
             @wraps(f)
             def __log_inbound(*args, **kwargs):
+                request: Request = kwargs.get("request")
+
                 request_timestamp = None
                 if include_request_in_response:
                     request_timestamp = _utc_now_str()

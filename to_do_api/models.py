@@ -1,12 +1,13 @@
 import uuid
 from enum import Enum
 
+from pydantic import BaseModel
 
-class User:
-    def __init__(self, id: str, name: str, username: str):
-        self.id = id
-        self.name = name
-        self.username = username
+
+class User(BaseModel):
+    id: uuid.UUID = None
+    name: str
+    username: str
 
 
 class TaskState(Enum):
@@ -15,9 +16,8 @@ class TaskState(Enum):
     DONE = 3
 
 
-class Task:
-    def __init__(self, description: str, user_id: str, state: TaskState):
-        self.id = uuid.uuid4()
-        self.description = description
-        self.state = state
-        self.user_id = user_id
+class Task(BaseModel):
+    id: uuid.UUID = None
+    description: str
+    user: User
+    state: TaskState

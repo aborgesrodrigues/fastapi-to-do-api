@@ -20,26 +20,20 @@ else
 endif
 
 venv: #
-	virtualenv -p $(VENV_PY_VER) venv
-	$(ACTIVATE) && $(PIP) install -r requirements.txt && $(DEACTIVATE)
+	uv sync
 
-venv-dev:
-	virtualenv -p $(VENV_PY_VER) venv
-	$(ACTIVATE) && $(PIP) install -r requirements-dev.txt && $(DEACTIVATE)
-
-test: venv-dev
-	$(ACTIVATE) && python -m pytest --cov to_do_api --no-cov-on-fail --cov-fail-under=94 --cov-report=xml:coverage.xml --cov-report=html --cov-branch
+test: venv
+	uv run pytest
 
 start: 
-	$(ACTIVATE) && \
 	DB_HOST=localhost \
-	$(PYTHON) app.py
+	uv run app.py
 
 support:
-	docker-compose up db
+	podman-compose up db filebeat elasticsearch kibana localstack
 
 run:
-	docker-compose up --build
+	podman-compose up --build
 
 clean:
-	- docker-compose down
+	- podman-compose down
