@@ -10,7 +10,7 @@
       user_id uuid NOT NULL,
       description varchar NOT NULL,
       state varchar NOT NULL,
-      CONSTRAINT user_pk PRIMARY KEY (id)
+      CONSTRAINT task_pk PRIMARY KEY (id)
     );
 
 
