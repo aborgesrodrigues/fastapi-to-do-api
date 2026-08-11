@@ -1,12 +1,13 @@
-filebeat.autodiscover:
-  providers:
-    - type: docker
-      hints.enabled: true
-      # only containers with co.elastic.logs/enabled: true will be discovered
-      hints.default_config.enabled: false
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/containers/*.log
+
 output.elasticsearch:
-  hosts: ["elasticsearch:9200"] 
+  hosts: ["elasticsearch:9200"]
   username: "elastic"
   password: "changeme"
+
 setup.kibana:
   host: "kibana:5601"

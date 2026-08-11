@@ -4,18 +4,21 @@ FROM python:3.7-slim
 WORKDIR /root/work
 
 # Do not copy anything other than reqs because this is a dev container and so we are using Docker volumes instead.
-COPY requirements-dev.txt .
-COPY requirements.txt .
+COPY pyproject.toml .
+COPY uv.lock .
 # NOTE: this is a dev container so we should use a docker volume mount instead of copying in files
 
 RUN apt-get update && \
-    apt-get install -y gcc git libc-dev libpq-dev
-# RUN pip install psycopg2
+    apt-get install -y gcc git libc-dev libpq-dev curl
+
+ENV UV_INSTALL_DIR=/usr/local/bin
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
 # Install python deps, both dev and regular
-RUN pip install -r requirements-dev.txt
+RUN uv sync
 
 EXPOSE 8000
 
 # We are using the same thing as PROD here but with the --reload option enabled, so it can be used as a dev server.
-CMD ["gunicorn", "--reload", "--worker-tmp-dir", "/dev/shm", "--workers=2", "--threads=4", "--worker-class=gthread", "--log-file=-", "-b", ":8000", "app"]
+CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 # CMD ["sleep", "999999"]

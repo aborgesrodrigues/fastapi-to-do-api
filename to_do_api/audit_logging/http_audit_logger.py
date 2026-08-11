@@ -4,7 +4,7 @@ import os
 import queue
 import threading
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import wraps
 from io import BytesIO
 
@@ -46,11 +46,6 @@ class HTTPAuditLogger(threading.Thread):
     Internally, this class will marshal the request/response, then use a 2nd thread to do the actual S3 writing.
     This Logger needs to match the GoLang AuditLogger's file naming and file contents.
     """
-    _RESERVED_FIELD_NAMES = {
-        "identifier", "eventTimestamp", "host", "hostname", "method", "path", "query", "protocol", "headers", "body",
-        "requestBody", "requestTimestamp", "requestHost", "requestHostname", "requestMethod", "requestPath",
-        "requestProtocol", "status", "statusCode",
-    }
 
     class Record:
         def __init__(self, key: str, content: str):
@@ -159,7 +154,7 @@ class HTTPAuditLogger(threading.Thread):
             logger.error(f"Error writing audit log. {err!s}")
 
     def _make_key(self, audit_id: str) -> str:
-        key = f'{self.s3_directory}/{datetime.now().strftime("%Y/%m/%d/%H/")}{audit_id}'
+        key = f'{self.s3_directory}/{datetime.now().astimezone().strftime("%Y/%m/%d/%H/")}{audit_id}'
         return key
 
     @staticmethod
@@ -210,9 +205,9 @@ class HTTPAuditLogger(threading.Thread):
         Creates an audit id for an `upstream` audit log record.  See golang package for more details
         The Audit ID should be unique, so for an HTTP message we append the nanosecond timestamp to the end
         """
-        audit_id = "in{0}{1}{2}{3}".format(req.url.path, "" if req.url.path.endswith("/") else "/", req.method,
-                                           "/response" if is_response else "/request")
-        audit_id += f'_{time.time_ns()}'
+
+        audit_id = f"in{req.url.path}{'' if req.url.path.endswith('/') else '/'}{req.method}{'/response' if is_response else '/request'}_{time.time_ns()}"
+
         return audit_id
 
     @staticmethod
@@ -305,5 +300,5 @@ def _utc_now_str() -> str:
     Not the ideal way to do ISO timestamp formatting to add UTC 'Z' to the end,
     We are passing in UTC time, but not setting a timezone, so this is a quick solution
     """
-    timestamp = datetime.utcnow().isoformat() + "Z"
+    timestamp = datetime.now(UTC).isoformat() + "Z"
     return timestamp

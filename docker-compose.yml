@@ -58,8 +58,7 @@ services:
     command: filebeat -e -strict.perms=false
     volumes:
       - ./dev/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./logs:/var/log/app:ro
   elasticsearch:
     labels:
       co.elastic.logs/enabled: false
