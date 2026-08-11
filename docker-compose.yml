@@ -8,19 +8,8 @@ services:
     restart: always
     ports:
       - 8000:8000
-    environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: pguser
-      DB_PASSWORD: pguser
-      DB_DATABASE: todo
-      AUDITLOG_S3_BUCKET: "audit-local"
-      AUDITLOG_S3_DIRECTORY: "todo-api/"
-      AUDITLOG_S3_ENDPOINT: "http://localstack:4566"
-      AUDITLOG_S3_REGION: "us-east-1"
-      AWS_ACCESS_KEY_ID: "test"
-      AWS_SECRET_ACCESS_KEY: "test"
-      AWS_SESSION_TOKEN: "test"
+    env_file:
+      - ./.env
     labels:
         co.elastic.logs/enabled: true
         co.elastic.logs/json.keys_under_root: true
@@ -44,10 +33,8 @@ services:
     restart: always
     ports:
       - '5432:5432'
-    environment:
-      POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: pguser
-      POSTGRES_DB: todo
+    env_file:
+      - ./.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
     volumes:

@@ -1,3 +1,4 @@
+import logging
 import os
 
 import psycopg2
@@ -5,6 +6,8 @@ import psycopg2.extras
 
 # register uuid
 psycopg2.extras.register_uuid()
+
+logger = logging.getLogger(__name__)
 
 class DAO:
     DB_HOST = "DB_HOST"
@@ -21,8 +24,8 @@ class DAO:
                                     host=os.getenv(DAO.DB_HOST, "db"),
                                     port=os.getenv(DAO.DB_PORT, "5432"),
                                     database=os.getenv(DAO.DB_DATABASE, "todo"))
-        except:
-            pass
+        except Exception as ex:
+            logger.error(f"error connecting to the database: {ex}")
     
     def execute(self, sql: str, parameters: tuple) -> int:
         try:

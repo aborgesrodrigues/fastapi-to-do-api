@@ -225,8 +225,8 @@ class HTTPAuditLogger(threading.Thread):
             try:
                 json_body = json.loads(content)
                 return json_body
-            except ValueError:
-                pass
+            except ValueError as vex:
+                logger.error(f"error getting request body: {vex}")
 
         except Exception:
             content = "bodyReadError"
@@ -245,8 +245,8 @@ class HTTPAuditLogger(threading.Thread):
             try:
                 json_body = json.loads(content)
                 return json_body
-            except ValueError:
-                pass
+            except ValueError as vex:
+                logger.error(f"error getting response body: {vex}")
         except Exception:
             content = "bodyReadError"
         return content
