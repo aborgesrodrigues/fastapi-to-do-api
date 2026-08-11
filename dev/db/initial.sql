@@ -1,15 +1,16 @@
     CREATE TABLE public."user" (
+      id uuid NOT NULL,
       username varchar NOT NULL,
       "name" varchar NOT NULL,
-      id uuid NOT NULL,
       CONSTRAINT user_pk PRIMARY KEY (id)
     );
 
     CREATE TABLE public.task (
+      id uuid NOT NULL,
+      user_id uuid NOT NULL,
       description varchar NOT NULL,
       state varchar NOT NULL,
-      id uuid NOT NULL,
-      user_id uuid NOT NULL
+      CONSTRAINT user_pk PRIMARY KEY (id)
     );
 
 

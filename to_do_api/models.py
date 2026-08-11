@@ -11,13 +11,13 @@ class User(BaseModel):
 
 
 class TaskState(Enum):
-    TO_DO = 1
-    DOING = 2
-    DONE = 3
+    TO_DO = "TO_DO"
+    DOING = "DOING"
+    DONE = "DONE"
 
 
 class Task(BaseModel):
     id: uuid.UUID = None
     description: str
-    user: User
+    user: User = None
     state: TaskState

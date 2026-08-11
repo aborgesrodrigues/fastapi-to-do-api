@@ -35,19 +35,15 @@ class DAO:
             self.__connection.commit()
 
             return self.__cursor.rowcount
-        except Exception as ex:
-            raise ex
         finally:
-            self.__cursor.close
+            self.__cursor.close()
     
-    def fetch_all(self, sql: str) -> list:
+    def fetch_all(self, sql: str, parameters: tuple = ()) -> list:
         try:
             self.__cursor = self.__connection.cursor()
-            self.__cursor.execute(sql, ())
+            self.__cursor.execute(sql, parameters)
 
             return self.__cursor.fetchall()
-        except Exception as ex:
-            raise ex
         finally:
             self.__cursor.close()
 
