@@ -6,12 +6,14 @@ import threading
 import time
 from datetime import UTC, datetime
 from functools import wraps
-from io import BytesIO
+from http import HTTPStatus
 
 import boto3
 from botocore.endpoint import is_valid_endpoint_url
 from botocore.exceptions import NoCredentialsError
-from fastapi import Request, Response
+from fastapi import HTTPException, Request, Response
+
+from to_do_api.utils import models_to_json
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +98,9 @@ class HTTPAuditLogger(threading.Thread):
 
             self._do_s3_write(record)
 
-    def log_request(self, req: Request):
+    async def log_request(self, req: Request):
         audit_id = HTTPAuditLogger._make_audit_id(req, False)
-        metadata = HTTPAuditLogger._get_request_metadata(req)
+        metadata = await HTTPAuditLogger._get_request_metadata(req)
         req_data = req
         self._queue_record(audit_id, metadata, req_data)
 
@@ -158,7 +160,7 @@ class HTTPAuditLogger(threading.Thread):
         return key
 
     @staticmethod
-    def _get_request_metadata(req: Request) -> dict:
+    async def _get_request_metadata(req: Request) -> dict:
         metadata = {
             "host": req.url.hostname,
             "hostname": req.url.netloc,
@@ -170,7 +172,7 @@ class HTTPAuditLogger(threading.Thread):
         }
 
         if req.headers.get("content-length"):
-            metadata["body"] = HTTPAuditLogger._request_body(req)
+            metadata["body"] = await HTTPAuditLogger._request_body(req)
 
         return metadata
 
@@ -184,12 +186,12 @@ class HTTPAuditLogger(threading.Thread):
             "requestPath": req.url.path,
             "requestProtocol": req.url.scheme,
             "protocol": req.url.scheme,
-            # "status": response.status,
-            # "statusCode": response.status_code,
-            # "headers": list(response.headers),
+            "status": response.status_code.value,
+            "statusCode": response.status_code,
+            "headers": list(response.headers),
         }
-        if response:
-            metadata["body"] = str(response)
+        if response and response.body:
+            metadata["body"] = str(response.body)
 
         if include_request_in_response:
             if req.content_length:
@@ -211,15 +213,14 @@ class HTTPAuditLogger(threading.Thread):
         return audit_id
 
     @staticmethod
-    def _request_body(req: Request) -> str:
+    async def _request_body(req: Request) -> str:
         """
         Retrieve the request body without making it unavailable
         consuming the form data in middleware will make it unavailable to the final application
         """
-        body = req.body
-        # noinspection PyBroadException
+        body = await req.body()
+
         try:
-            req.environ['wsgi.input'] = BytesIO(body)
             content = body.decode("utf-8")
             # Try to convert to Python object.  If fails, return as byte array
             try:
@@ -276,18 +277,35 @@ class HTTPAuditLogger(threading.Thread):
 
         def _log_inbound(f):
             @wraps(f)
-            def __log_inbound(*args, **kwargs):
+            async def __log_inbound(*args, **kwargs):
                 request: Request = kwargs.get("request")
 
                 request_timestamp = None
                 if include_request_in_response:
                     request_timestamp = _utc_now_str()
                 if log_request:
-                    self.log_request(req=request)
-                result = f(*args, **kwargs)
+                    await self.log_request(req=request)
+
+                raise_error = None
+                try:
+                    result = await f(*args, **kwargs)
+                        
+                    response = Response(
+                        content=models_to_json(result),
+                        status_code=HTTPStatus.OK
+                    )
+                except HTTPException as httpex:
+                    raise_error = httpex
+                    response = Response(
+                        content=None,
+                        status_code=httpex.status_code
+                    )
                 if log_response:
-                    self.log_response(req=request, resp=result, include_request_in_response=include_request_in_response,
+                    self.log_response(req=request, resp=response, include_request_in_response=include_request_in_response,
                                       request_timestamp=request_timestamp)
+
+                if raise_error:
+                    raise raise_error
                 return result
 
             return __log_inbound

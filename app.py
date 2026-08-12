@@ -12,6 +12,7 @@ from to_do_api.service.user import UserService
 __LOG_FMT = "{\"time\": \"%(asctime)s\", \"name\": \"[%(name)s]\", \"filename\": \"[%(filename)s]\", \"lineno\": \"[%(lineno)s]\", \"levelname\": \"%(levelname)s\", \"message\": \"%(message)s\"}"
 
 app = FastAPI()
+
 audit_logger = HTTPAuditLogger.from_env()
 audit_logger.start()
 
@@ -22,7 +23,7 @@ root_logger = logging.getLogger()
 
 @app.get("/users")
 @audit_logger.log_inbound(include_request_in_response=False)
-def get_users(request: Request) -> list[User]:
+async def get_users(request: Request) -> list[User]:
     try:
         user_service = UserService()
         response = user_service.list()
@@ -37,7 +38,7 @@ def get_users(request: Request) -> list[User]:
 
 @app.post("/users")
 @audit_logger.log_inbound(include_request_in_response=False)
-def create_users(request: Request, user: User) -> User:
+async def create_users(request: Request, user: User) -> User:
     try:
         user_service = UserService()
         response = user_service.insert(user)
@@ -51,7 +52,7 @@ def create_users(request: Request, user: User) -> User:
 
 @app.get("/users/{user_id}/tasks")
 @audit_logger.log_inbound(include_request_in_response=False)
-def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
+async def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
     try:
         task_service = TaskService()
         response = task_service.list(user=User(id=user_id, name="", username=""))
@@ -65,7 +66,7 @@ def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
 
 @app.post("/users/{user_id}/tasks")
 @audit_logger.log_inbound(include_request_in_response=False)
-def create_tasks(request: Request, user_id: uuid.UUID, task: Task) -> Task:
+async def create_tasks(request: Request, user_id: uuid.UUID, task: Task) -> Task:
     try:
         task_service = TaskService()
 
