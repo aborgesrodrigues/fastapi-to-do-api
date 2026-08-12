@@ -5,7 +5,7 @@ from http import HTTPStatus
 from fastapi import FastAPI, HTTPException, Request
 
 from to_do_api.audit_logging import HTTPAuditLogger
-from to_do_api.models import Task, User
+from to_do_api.models import Task, TaskCreate, User, UserCreate
 from to_do_api.service.task import TaskService
 from to_do_api.service.user import UserService
 
@@ -38,10 +38,11 @@ async def get_users(request: Request) -> list[User]:
 
 @app.post("/users")
 @audit_logger.log_inbound(include_request_in_response=False)
-async def create_users(request: Request, user: User) -> User:
+async def create_users(request: Request, user_create: UserCreate) -> User:
     try:
         user_service = UserService()
-        response = user_service.insert(user)
+        user = User.from_create(user_create=user_create)
+        response = user_service.insert(user=user)
 
         return response
     except Exception as ex:
@@ -55,7 +56,7 @@ async def create_users(request: Request, user: User) -> User:
 async def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
     try:
         task_service = TaskService()
-        response = task_service.list(user=User(id=user_id, name="", username=""))
+        response = task_service.list(user_id)
 
         return response
     except Exception as ex:
@@ -66,12 +67,11 @@ async def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
 
 @app.post("/users/{user_id}/tasks")
 @audit_logger.log_inbound(include_request_in_response=False)
-async def create_tasks(request: Request, user_id: uuid.UUID, task: Task) -> Task:
+async def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskCreate) -> Task:
     try:
         task_service = TaskService()
-
-        task.user = User(id=user_id, name="", username="")
-        response = task_service.insert(task)
+        task = Task.from_create(user_id=user_id, task_create=task_create)
+        response = task_service.insert(task=task)
 
         return response
     except Exception as ex:

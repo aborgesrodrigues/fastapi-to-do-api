@@ -1,4 +1,3 @@
-import uuid
 
 from to_do_api.dao.user import UserDAO
 from to_do_api.models import User
@@ -9,7 +8,6 @@ class UserService:
         self.__dao = UserDAO()
 
     def insert(self, user: User) -> User:
-        user.id = str(uuid.uuid4())
         row_count = self.__dao.insert(user)
 
         if row_count != 1:
