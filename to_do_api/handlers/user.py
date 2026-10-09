@@ -1,31 +1,22 @@
-import logging
 import uuid
 from http import HTTPStatus
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
-from to_do_api.audit_logging import HTTPAuditLogger
+from to_do_api.handlers.base import audit_logger
 from to_do_api.models import Task, TaskCreate, User, UserCreate
 from to_do_api.service.task import TaskService
 from to_do_api.service.user import UserService
 
-__LOG_FMT = "{\"time\": \"%(asctime)s\", \"name\": \"[%(name)s]\", \"filename\": \"[%(filename)s]\", \"lineno\": \"[%(lineno)s]\", \"levelname\": \"%(levelname)s\", \"message\": \"%(message)s\"}"
+user_routes = APIRouter(prefix="/users", tags=["users"])
 
-app = FastAPI()
+user_service = UserService()
+task_service = TaskService()
 
-audit_logger = HTTPAuditLogger.from_env()
-audit_logger.start()
-
-
-logging.basicConfig(level=logging.INFO, format=__LOG_FMT)
-root_logger = logging.getLogger()
-
-
-@app.get("/users")
+@user_routes.get("/")
 @audit_logger.log_inbound(include_request_in_response=False)
 async def get_users(request: Request) -> list[User]:
     try:
-        user_service = UserService()
         response = user_service.list()
 
         return response
@@ -36,11 +27,10 @@ async def get_users(request: Request) -> list[User]:
         )
 
 
-@app.post("/users")
+@user_routes.post("/")
 @audit_logger.log_inbound(include_request_in_response=False)
 async def create_users(request: Request, user_create: UserCreate) -> User:
     try:
-        user_service = UserService()
         user = User.from_create(user_create=user_create)
         response = user_service.insert(user=user)
 
@@ -51,11 +41,10 @@ async def create_users(request: Request, user_create: UserCreate) -> User:
             detail=ex,
         )
 
-@app.get("/users/{user_id}/tasks")
+@user_routes.get("/{user_id}/tasks")
 @audit_logger.log_inbound(include_request_in_response=False)
 async def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
     try:
-        task_service = TaskService()
         response = task_service.list(user_id)
 
         return response
@@ -65,11 +54,10 @@ async def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
             detail=ex,
         )
 
-@app.post("/users/{user_id}/tasks")
+@user_routes.post("/users/{user_id}/tasks")
 @audit_logger.log_inbound(include_request_in_response=False)
 async def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskCreate) -> Task:
     try:
-        task_service = TaskService()
         task = Task.from_create(user_id=user_id, task_create=task_create)
         response = task_service.insert(task=task)
 
