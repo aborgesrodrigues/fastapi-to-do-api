@@ -17,8 +17,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # append the routes
+from to_do_api.exception_handlers import register_exception_handlers
 from to_do_api.handlers.user import user_routes
 
 app.include_router(user_routes)
+register_exception_handlers(app)
 
 logging.basicConfig(level=logging.INFO, format=__LOG_FMT)
