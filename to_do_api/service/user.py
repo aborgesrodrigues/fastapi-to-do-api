@@ -1,4 +1,5 @@
 
+
 from to_do_api.dao.user import UserDAO
 from to_do_api.models import User
 
@@ -8,10 +9,8 @@ class UserService:
         self.__dao = UserDAO()
 
     def insert(self, user: User) -> User:
-        row_count = self.__dao.insert(user)
+        self.__dao.insert(user)
 
-        if row_count != 1:
-            raise Exception("Error inserting user")
         return user
 
     def list(self) -> list[User]:
