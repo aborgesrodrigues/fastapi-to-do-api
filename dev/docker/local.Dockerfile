@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.14-slim
 
 # Set up a safe working directory to put the code in
 WORKDIR /root/work
@@ -20,5 +20,4 @@ RUN uv sync
 EXPOSE 8000
 
 # We are using the same thing as PROD here but with the --reload option enabled, so it can be used as a dev server.
-CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-# CMD ["sleep", "999999"]
+CMD ["uv", "run", "uvicorn", "to_do_api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

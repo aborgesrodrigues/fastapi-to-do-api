@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./dev/docker/local.Dockerfile
+      dockerfile: ./dev/docker/Dockerfile
     restart: always
     ports:
       - 8000:8000
