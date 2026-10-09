@@ -17,3 +17,4 @@
     -- public.task foreign keys
 
     ALTER TABLE public.task ADD CONSTRAINT task_fk FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+    ALTER TABLE public."user" ADD CONSTRAINT user_unique UNIQUE (username);
