@@ -27,7 +27,7 @@ test: venv
 
 start: 
 	DB_HOST=localhost \
-	uv run app.py
+	uvicorn to_do_api.app:app --reload
 
 support:
 	podman-compose up db filebeat elasticsearch kibana localstack
