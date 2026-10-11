@@ -10,7 +10,7 @@ from to_do_api.exceptions import UserAlreadyExistsError
 logger = logging.getLogger(__name__)
 
 
-async def user_exists_handler(request: Request, exc: UserAlreadyExistsError):
+def user_exists_handler(request: Request, exc: UserAlreadyExistsError):
     logger.error(f"User already exists: username {exc.username}")
 
     return JSONResponse(
@@ -19,7 +19,7 @@ async def user_exists_handler(request: Request, exc: UserAlreadyExistsError):
     )
 
 
-async def unhandled_exception_handler(request: Request, exc: Exception):
+def unhandled_exception_handler(request: Request, exc: Exception):
     logger.exception("unhandled error on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
