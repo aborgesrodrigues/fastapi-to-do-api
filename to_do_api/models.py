@@ -41,3 +41,9 @@ class Task(BaseModel):
     @staticmethod
     def from_create(user_id: uuid.UUID, task_create: TaskCreate) -> Task:
         return Task(id=uuid.uuid4(), description=task_create.description, state=task_create.state, user=User(id=user_id, name="", username=""))
+
+
+class AuthResponse(BaseModel):
+	access_token: str
+	refresh_token: str
+	user: User

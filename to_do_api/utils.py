@@ -46,4 +46,5 @@ def models_to_json(items: Any, *, indent: int | None = None) -> str:
         adapter = _get_adapter(type(items))
         return adapter.dump_json(items, indent=indent).decode()
 
-    raise TypeError(f"Expected BaseModel or list of BaseModel, got {type(items)}")
+    return ""
+    # raise TypeError(f"Expected BaseModel or list of BaseModel, got {type(items)}")

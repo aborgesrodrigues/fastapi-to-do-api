@@ -288,7 +288,7 @@ class HTTPAuditLogger(threading.Thread):
 
                 raise_error = None
                 try:
-                    result = await f(*args, **kwargs)
+                    result = f(*args, **kwargs)
                         
                     response = Response(
                         content=models_to_json(result),
