@@ -13,6 +13,7 @@ ALGORITHM = os.getenv("ALGORITHM")
 
 PUBLIC_PATHS = {
     "/token",
+    "/login",
     "/docs",
     "/redoc",
     "/openapi.json",
@@ -59,3 +60,4 @@ async def jwt_auth_middleware(request: Request, call_next):
     request.state.token_payload = payload
  
     return await call_next(request)
+

@@ -29,4 +29,5 @@ app.include_router(user_routes)
 app.include_router(base_routes)
 
 app.add_middleware(BaseHTTPMiddleware, dispatch=jwt_auth_middleware)
+
 register_exception_handlers(app)
