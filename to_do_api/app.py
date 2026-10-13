@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from to_do_api.dao.dao import DAO
-from to_do_api.middlewares import jwt_auth_middleware, prometheus_middleware
+from to_do_api.middlewares import prometheus_middleware
 
 __LOG_FMT = "{\"time\": \"%(asctime)s\", \"name\": \"[%(name)s]\", \"filename\": \"[%(filename)s]\", \"lineno\": \"[%(lineno)s]\", \"levelname\": \"%(levelname)s\", \"message\": \"%(message)s\"}"
 
@@ -30,7 +30,6 @@ app.include_router(user_routes)
 app.include_router(task_routes)
 app.include_router(base_routes)
 
-app.add_middleware(BaseHTTPMiddleware, dispatch=jwt_auth_middleware)
 app.add_middleware(BaseHTTPMiddleware, dispatch=prometheus_middleware)
 
 register_exception_handlers(app)

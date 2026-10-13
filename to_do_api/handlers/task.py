@@ -1,8 +1,9 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 
+from to_do_api.dependencies import get_current_user_id
 from to_do_api.exceptions import NotFoundError
 from to_do_api.handlers.base import audit_logger
 from to_do_api.models import Task, TaskManage
@@ -10,7 +11,7 @@ from to_do_api.service.task import TaskService
 
 logger = logging.getLogger(__name__)
 
-task_routes = APIRouter(prefix="/tasks", tags=["tasks"])
+task_routes = APIRouter(prefix="/tasks", tags=["tasks"], dependencies=[Depends(get_current_user_id)])
 
 task_service = TaskService()
 

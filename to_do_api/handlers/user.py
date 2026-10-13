@@ -2,23 +2,23 @@ import logging
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
 
+from to_do_api.dependencies import get_current_user_id, require_same_user
 from to_do_api.exceptions import NotFoundError
 from to_do_api.handlers.base import audit_logger
-from to_do_api.handlers.utils import (
-    create_access_token,
-    create_refresh_token,
-    require_same_user,
-)
+from to_do_api.handlers.utils import create_access_token, create_refresh_token
 from to_do_api.models import Task, TaskManage, User, UserManage
 from to_do_api.service.task import TaskService
 from to_do_api.service.user import UserService
 
 logger = logging.getLogger(__name__)
 
-user_routes = APIRouter(prefix="/users", tags=["users"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+user_routes = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user_id)])
 
 user_service = UserService()
 task_service = TaskService()
@@ -40,7 +40,7 @@ def create_users(request: Request, user_create: UserManage):
     return response
 
 
-@user_routes.get("/{user_id}")
+@user_routes.get("/{user_id}", dependencies=[Depends(require_same_user)])
 @audit_logger.log_inbound(include_request_in_response=False)
 def get_user(request: Request, user_id: uuid.UUID) -> User:
     user = user_service.get(id=user_id)
@@ -50,7 +50,7 @@ def get_user(request: Request, user_id: uuid.UUID) -> User:
 
     return user
 
-@user_routes.put("/{user_id}")
+@user_routes.put("/{user_id}", dependencies=[Depends(require_same_user)])
 @audit_logger.log_inbound(include_request_in_response=False)
 def update_user(request: Request, user_id: uuid.UUID, user_manage: UserManage) -> User:
     user = user_service.get(id=user_id)
@@ -67,7 +67,7 @@ def update_user(request: Request, user_id: uuid.UUID, user_manage: UserManage) -
     return response
 
 
-@user_routes.get("/{user_id}/tasks")
+@user_routes.get("/{user_id}/tasks", dependencies=[Depends(require_same_user)])
 @audit_logger.log_inbound(include_request_in_response=False)
 def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
     response = task_service.list(user_id)
@@ -75,7 +75,7 @@ def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
     return response
 
 
-@user_routes.post("/{user_id}/tasks")
+@user_routes.post("/{user_id}/tasks", dependencies=[Depends(require_same_user)])
 @audit_logger.log_inbound(include_request_in_response=False)
 def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskManage) -> Task:
     user = user_service.get(id=user_id)
@@ -89,9 +89,8 @@ def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskManage) 
     return response
 
 
-@user_routes.get("/{user_id}/refresh_token")
+@user_routes.get("/{user_id}/refresh_token", dependencies=[Depends(require_same_user)])
 @audit_logger.log_inbound(include_request_in_response=False)
-@require_same_user()
 def refresh_token(request: Request):
     user = User(id=request.state.user, name="", username="")
     # create access and refresh tokens
