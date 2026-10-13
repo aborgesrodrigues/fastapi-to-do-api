@@ -11,7 +11,8 @@ dependencies = [
     "pydantic==2.13.4",
     "pyjwt",
     "pwdlib[argon2]",
-    "python-multipart"
+    "python-multipart",
+    "prometheus-client"
 
 ]
 

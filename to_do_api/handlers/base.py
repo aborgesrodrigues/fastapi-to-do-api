@@ -1,7 +1,8 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from to_do_api.audit_logging.http_audit_logger import HTTPAuditLogger
 from to_do_api.exceptions import LoginError
@@ -64,3 +65,7 @@ def login(request: Request, login: Login):
             "refresh_token": refresh_token,
         }
     )
+
+@base_routes.get("/metrics", include_in_schema=False)
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
