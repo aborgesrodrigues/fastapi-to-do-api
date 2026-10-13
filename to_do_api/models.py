@@ -5,13 +5,12 @@ from pydantic import BaseModel
 
 
 class UserCreate(BaseModel):
-    id: uuid.UUID = None
     name: str
     username: str
+    password: str
 
 
 class TaskCreate(BaseModel):
-    id: uuid.UUID = None
     description: str
     state: TaskState
 
@@ -20,10 +19,16 @@ class User(BaseModel):
     id: uuid.UUID
     name: str
     username: str
+    password: str
 
     @staticmethod
     def from_create(user_create: UserCreate) -> User:
-        return User(id=uuid.uuid4(), name=user_create.name, username=user_create.username)
+        return User(
+            id=uuid.uuid4(), 
+            name=user_create.name, 
+            username=user_create.username, 
+            password=user_create.password
+        )
 
 
 class TaskState(Enum):
@@ -47,3 +52,8 @@ class AuthResponse(BaseModel):
 	access_token: str
 	refresh_token: str
 	user: User
+
+
+class Login(BaseModel):
+    username: str
+    password: str
