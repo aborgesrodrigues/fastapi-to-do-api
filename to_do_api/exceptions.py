@@ -1,3 +1,8 @@
+class NotFoundError(Exception):
+    def __init__(self, id: any):
+        super().__init__(f"item {id} not found")
+        self.id = id
+
 class UserAlreadyExistsError(Exception):
     def __init__(self, username: str):
         super().__init__(f"username '{username}' already exists")

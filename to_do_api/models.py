@@ -10,7 +10,7 @@ class UserCreate(BaseModel):
     password: str
 
 
-class TaskCreate(BaseModel):
+class TaskManage(BaseModel):
     description: str
     state: TaskState
 
@@ -44,8 +44,8 @@ class Task(BaseModel):
     state: TaskState
 
     @staticmethod
-    def from_create(user_id: uuid.UUID, task_create: TaskCreate) -> Task:
-        return Task(id=uuid.uuid4(), description=task_create.description, state=task_create.state, user=User(id=user_id, name="", username=""))
+    def from_create(user_id: uuid.UUID, task_create: TaskManage, user: User) -> Task:
+        return Task(id=uuid.uuid4(), description=task_create.description, state=task_create.state, user=user)
 
 
 class AuthResponse(BaseModel):

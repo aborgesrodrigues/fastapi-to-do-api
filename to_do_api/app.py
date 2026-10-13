@@ -23,9 +23,11 @@ app = FastAPI(lifespan=lifespan)
 # append the routes
 from to_do_api.exception_handlers import register_exception_handlers
 from to_do_api.handlers.base import base_routes
+from to_do_api.handlers.task import task_routes
 from to_do_api.handlers.user import user_routes
 
 app.include_router(user_routes)
+app.include_router(task_routes)
 app.include_router(base_routes)
 
 app.add_middleware(BaseHTTPMiddleware, dispatch=jwt_auth_middleware)
