@@ -2,8 +2,11 @@
 import os
 from datetime import UTC, datetime, timedelta
 from enum import Enum
+from functools import wraps
+from http import HTTPStatus
 
 import jwt
+from fastapi import HTTPException, Request
 
 from to_do_api.models import User
 
@@ -41,3 +44,25 @@ def create_refresh_token(user: User) -> str:
     }
     
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def require_same_user():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            request: Request | None = kwargs.get("request")
+
+            user_path = request.path_params.get("user_id")
+            user_jwt = request.state.user
+
+            if user_jwt != user_path:
+                raise HTTPException(
+                    status_code=HTTPStatus.UNAUTHORIZED,
+                    detail="user id doesn't match with token"
+                )
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

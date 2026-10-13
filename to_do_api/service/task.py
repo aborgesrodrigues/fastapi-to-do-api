@@ -2,9 +2,10 @@ import uuid
 
 from to_do_api.dao.task import TaskDAO
 from to_do_api.models import Task
+from to_do_api.service.base import Service
 
 
-class TaskService:
+class TaskService(Service):
     def __init__(self):
         self.__dao = TaskDAO()
 

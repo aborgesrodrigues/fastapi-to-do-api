@@ -6,7 +6,11 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from to_do_api.handlers.base import audit_logger
-from to_do_api.handlers.utils import create_access_token, create_refresh_token
+from to_do_api.handlers.utils import (
+    create_access_token,
+    create_refresh_token,
+    require_same_user,
+)
 from to_do_api.models import Task, TaskCreate, User, UserCreate
 from to_do_api.service.task import TaskService
 from to_do_api.service.user import UserService
@@ -54,6 +58,7 @@ def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskCreate) 
 
 @user_routes.get("/{user_id}/refresh_token")
 @audit_logger.log_inbound(include_request_in_response=False)
+@require_same_user()
 def refresh_token(request: Request):
     user = User(id=request.state.user, name="", username="")
     # create access and refresh tokens

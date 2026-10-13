@@ -74,3 +74,9 @@ class DAO:
         with self._get_connection() as conn, conn.cursor() as cursor:
             cursor.execute(sql, parameters)
             return cursor.fetchall()
+
+
+    def fetch_one(self, sql: str, parameters: tuple = ()) -> any:
+        with self._get_connection() as conn, conn.cursor() as cursor:
+            cursor.execute(sql, parameters)
+            return cursor.fetchone()
