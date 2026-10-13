@@ -22,6 +22,20 @@ class UserDAO(DAO):
             )
         except UniqueViolation:
             raise UserAlreadyExistsError(username=user.username)
+
+
+    def update(self, user: User) -> int:
+        try:
+            return self.execute(
+                """
+                UPDATE public.user
+                SET username = %s, name = %s, password = %s
+                WHERE id = %s
+                """, 
+                (user.username, user.name, user.password, user.id)
+            )
+        except UniqueViolation:
+            raise UserAlreadyExistsError(username=user.username)
         
 
     def list(self) -> list[User]:
@@ -38,7 +52,7 @@ class UserDAO(DAO):
             WHERE u.username = %s
             """, (username, ))
 
-        return User(id=user[0], name=user[1], username=user[2], password=user[3])
+        return User(id=user[0], name=user[1], username=user[2], password=user[3]) if user else None
 
     def get(self, id: uuid.UUID) -> User:
         user = self.fetch_one(

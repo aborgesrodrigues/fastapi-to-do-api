@@ -18,6 +18,12 @@ class UserService(Service):
 
         return user
 
+    def update(self, user: User) -> User:
+        user.password = self.password_hash.hash(user.password)
+        self.__dao.update(user)
+
+        return user
+
     def get(self, id: uuid.UUID) -> User:
         return self.__dao.get(id=id)
 

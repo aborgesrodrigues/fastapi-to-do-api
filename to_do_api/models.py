@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 
-class UserCreate(BaseModel):
+class UserManage(BaseModel):
     name: str
     username: str
     password: str
@@ -22,7 +22,7 @@ class User(BaseModel):
     password: str
 
     @staticmethod
-    def from_create(user_create: UserCreate) -> User:
+    def from_create(user_create: UserManage) -> User:
         return User(
             id=uuid.uuid4(), 
             name=user_create.name, 

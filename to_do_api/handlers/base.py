@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from to_do_api.audit_logging.http_audit_logger import HTTPAuditLogger
 from to_do_api.exceptions import LoginError
 from to_do_api.handlers.utils import create_access_token, create_refresh_token
-from to_do_api.models import Login, User, UserCreate
+from to_do_api.models import Login, User, UserManage
 from to_do_api.service.base import password_hash
 from to_do_api.service.user import UserService
 
@@ -18,7 +18,7 @@ audit_logger = HTTPAuditLogger.from_env()
 audit_logger.start()
 
 @base_routes.post("/token")
-def generate_token(request: Request, user_create: UserCreate):
+def generate_token(request: Request, user_create: UserManage):
     user = User.from_create(user_create=user_create)
     response = user_service.insert(user=user)
 

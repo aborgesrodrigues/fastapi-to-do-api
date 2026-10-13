@@ -12,7 +12,7 @@ from to_do_api.handlers.utils import (
     create_refresh_token,
     require_same_user,
 )
-from to_do_api.models import Task, TaskManage, User, UserCreate
+from to_do_api.models import Task, TaskManage, User, UserManage
 from to_do_api.service.task import TaskService
 from to_do_api.service.user import UserService
 
@@ -33,9 +33,36 @@ def get_users(request: Request) -> list[User]:
 
 @user_routes.post("/")
 @audit_logger.log_inbound(include_request_in_response=False)
-def create_users(request: Request, user_create: UserCreate):
+def create_users(request: Request, user_create: UserManage):
     user = User.from_create(user_create=user_create)
     response = user_service.insert(user=user)
+
+    return response
+
+
+@user_routes.get("/{user_id}")
+@audit_logger.log_inbound(include_request_in_response=False)
+def get_user(request: Request, user_id: uuid.UUID) -> User:
+    user = user_service.get(id=user_id)
+
+    if not user:
+        raise NotFoundError(id=user_id)
+
+    return user
+
+@user_routes.put("/{user_id}")
+@audit_logger.log_inbound(include_request_in_response=False)
+def update_user(request: Request, user_id: uuid.UUID, user_manage: UserManage) -> User:
+    user = user_service.get(id=user_id)
+
+    if not user:
+        raise NotFoundError(id=user_id)
+
+    user.username = user_manage.username
+    user.name = user_manage.name
+    user.password = user_manage.password
+
+    response = user_service.update(user=user)
 
     return response
 
