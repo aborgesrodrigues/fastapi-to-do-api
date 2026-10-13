@@ -1,4 +1,6 @@
 
+import uuid
+
 from psycopg2.errors import UniqueViolation
 
 from to_do_api.dao.dao import DAO
@@ -28,12 +30,22 @@ class UserDAO(DAO):
         users = [User(id=user[0], name=user[1], username=user[2]) for user in users]
         return users
 
-    def get(self, username: str) -> User:
+    def get_by_username(self, username: str) -> User:
         user = self.fetch_one(
             """
             SELECT id, name, username, password 
             FROM public.user u 
             WHERE u.username = %s
             """, (username, ))
+
+        return User(id=user[0], name=user[1], username=user[2], password=user[3])
+
+    def get(self, id: uuid.UUID) -> User:
+        user = self.fetch_one(
+            """
+            SELECT id, name, username, password 
+            FROM public.user u 
+            WHERE u.id = %s
+            """, (id, ))
 
         return User(id=user[0], name=user[1], username=user[2], password=user[3])

@@ -5,13 +5,14 @@ from http import HTTPStatus
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from to_do_api.exceptions import NotFoundError
 from to_do_api.handlers.base import audit_logger
 from to_do_api.handlers.utils import (
     create_access_token,
     create_refresh_token,
     require_same_user,
 )
-from to_do_api.models import Task, TaskCreate, User, UserCreate
+from to_do_api.models import Task, TaskManage, User, UserCreate
 from to_do_api.service.task import TaskService
 from to_do_api.service.user import UserService
 
@@ -49,8 +50,13 @@ def get_tasks(request: Request, user_id: uuid.UUID) -> list[Task]:
 
 @user_routes.post("/{user_id}/tasks")
 @audit_logger.log_inbound(include_request_in_response=False)
-def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskCreate) -> Task:
-    task = Task.from_create(user_id=user_id, task_create=task_create)
+def create_tasks(request: Request, user_id: uuid.UUID, task_create: TaskManage) -> Task:
+    user = user_service.get(id=user_id)
+
+    if not user:
+        raise NotFoundError(id=user_id)
+    
+    task = Task.from_create(user_id=user_id, task_create=task_create, user=user)
     response = task_service.insert(task=task)
 
     return response

@@ -1,5 +1,7 @@
 
 
+import uuid
+
 from to_do_api.dao.user import UserDAO
 from to_do_api.models import User
 from to_do_api.service.base import Service
@@ -16,8 +18,11 @@ class UserService(Service):
 
         return user
 
+    def get(self, id: uuid.UUID) -> User:
+        return self.__dao.get(id=id)
+
     def list(self) -> list[User]:
         return self.__dao.list()
 
-    def get(self, username: str) -> User:
-        return self.__dao.get(username=username)
+    def get_by_username(self, username: str) -> User:
+        return self.__dao.get_by_username(username=username)

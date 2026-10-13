@@ -7,14 +7,25 @@ from to_do_api.service.base import Service
 
 class TaskService(Service):
     def __init__(self):
+        super().__init__()
         self.__dao = TaskDAO()
 
     def insert(self, task: Task) -> Task:
-        row_count = self.__dao.insert(task)
+        self.__dao.insert(task)
 
-        if row_count != 1:
-            raise Exception("Error inserting task")
         return task
+
+    def get(self, id: uuid.UUID) -> Task:
+        return self.__dao.get(id=id)
+
+    def update(self, task: Task) -> Task:
+        self.__dao.update(task)
+
+        return task
+
+    def delete(self, id: uuid.UUID) -> Task:
+        return self.__dao.delete(id=id)
 
     def list(self, user_id: uuid.UUID) -> list[Task]:
         return self.__dao.list(user_id)
+        

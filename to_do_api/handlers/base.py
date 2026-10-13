@@ -38,7 +38,7 @@ def generate_token(request: Request, user_create: UserCreate):
 
 @base_routes.post("/login")
 def login(request: Request, login: Login):
-    user = user_service.get(login.username)
+    user = user_service.get_by_username(login.username)
 
     if not user:
         raise LoginError(username=login.username)
