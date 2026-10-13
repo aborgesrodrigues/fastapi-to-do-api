@@ -12,7 +12,12 @@ class UserDAO(DAO):
 
     def insert(self, user: User) -> int:
         try:
-            return self.execute("INSERT INTO public.user(id, username, name) VALUES(%s,%s,%s)", (user.id, user.username, user.name))
+            return self.execute(
+                """
+                INSERT INTO public.user(id, username, name, password) VALUES(%s,%s,%s, %s)
+                """, 
+                (user.id, user.username, user.name, user.password)
+            )
         except UniqueViolation:
             raise UserAlreadyExistsError(username=user.username)
         
@@ -22,3 +27,13 @@ class UserDAO(DAO):
 
         users = [User(id=user[0], name=user[1], username=user[2]) for user in users]
         return users
+
+    def get(self, username: str) -> User:
+        user = self.fetch_one(
+            """
+            SELECT id, name, username, password 
+            FROM public.user u 
+            WHERE u.username = %s
+            """, (username, ))
+
+        return User(id=user[0], name=user[1], username=user[2], password=user[3])
