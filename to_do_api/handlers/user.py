@@ -4,7 +4,6 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
 
 from to_do_api.dependencies import get_current_user_id, require_same_user
 from to_do_api.exceptions import NotFoundError
@@ -16,12 +15,11 @@ from to_do_api.service.user import UserService
 
 logger = logging.getLogger(__name__)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
 user_routes = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user_id)])
 
 user_service = UserService()
 task_service = TaskService()
+
 
 @user_routes.get("/")
 @audit_logger.log_inbound(include_request_in_response=False)

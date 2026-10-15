@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from to_do_api.handlers.utils import ALGORITHM, SECRET_KEY
+from to_do_api.handlers.utils import ALGORITHM, SECRET_KEY, TokenType
 
 bearer_scheme = HTTPBearer()
 
@@ -21,12 +21,14 @@ def unauthorized(detail: str) -> JSONResponse:
 
 def get_token_payload(credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],):
     try:
-        return jwt.decode(
+        payload = jwt.decode(
             credentials.credentials,
             SECRET_KEY,
             algorithms=[ALGORITHM],
             options={"require": ["exp", "type", "sub"]},
         )
+
+        return payload
     except jwt.ExpiredSignatureError:
         raise unauthorized("Expired token")
     except jwt.InvalidTokenError:
@@ -36,6 +38,12 @@ def get_token_payload(credentials: Annotated[HTTPAuthorizationCredentials, Depen
 def get_current_user_id(
     payload: Annotated[dict, Depends(get_token_payload)],
 ) -> uuid.UUID:
+    # allow get user only if is a access token
+    if payload["type"] != TokenType.ACCESS.value:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail="Invalid token",
+        )
     return payload["sub"]  # ou buscar o usuário no banco aqui
 
 

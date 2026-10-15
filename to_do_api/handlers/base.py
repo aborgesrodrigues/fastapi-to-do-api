@@ -46,7 +46,7 @@ def login(request: Request, login: Login):
 
     # verify_and_update confere a senha e, se os parâmetros do hash
     # ficaram defasados, devolve um hash novo para atualizar no banco
-    valid, updated_hash = password_hash.verify_and_update(
+    valid, _ = password_hash.verify_and_update(
         login.password, user.password
     )
     if not valid:
