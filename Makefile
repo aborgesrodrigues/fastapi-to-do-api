@@ -30,10 +30,10 @@ start:
 	uvicorn to_do_api.app:app --reload
 
 support:
-	podman-compose up db filebeat elasticsearch kibana localstack
+	podman-compose up -d db filebeat elasticsearch localstack grafana
 
 run:
-	podman-compose up --build
+	podman-compose up -d --build
 
 clean:
-	- podman-compose down
+	podman-compose down
