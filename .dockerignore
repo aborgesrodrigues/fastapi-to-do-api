@@ -1,0 +1,10 @@
+dev
+.venv
+.vscode
+test
+docker-compose.yml
+Makefile
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
